@@ -8,7 +8,7 @@ import (
 type Robot struct {
 	gorm.Model
 	wsalelibs.Robot
-	RbotoExt
+	RobotExt
 }
 
 //初始化一个实例
@@ -18,10 +18,10 @@ func (c *Robot) Ensure() error {
 }
 
 type RobotExt struct {
-	AutoAllow     bool   `json:"auto_allow"`                                       //是否自动通过好友申请
-	FansTotal     int32  `gorm:"index:idx_fans_total" json:"fans_total"`           //粉丝数量
-	ChatRoomTotal int32  `gorm:"index:idx_chat_room_total" json:"chat_room_total"` //聊天群数量
-	CircleImage   string `gorm:"type:varchar(500)" json:"circle_image"`            //朋友圈封面图
+	AutoAllow     bool   `gorm:"default:false" json:"auto_allow"`        //是否自动通过好友申请
+	FansTotal     int32  `gorm:"default:0;index" json:"fans_total"`      //粉丝数量
+	ChatRoomTotal int32  `gorm:"default:0;index" json:"chat_room_total"` //聊天群数量
+	CircleImage   string `gorm:"type:varchar(500)" json:"circle_image"`  //朋友圈封面图
 }
 
 func (c *RobotExt) ToggleAutoAllow() error {
