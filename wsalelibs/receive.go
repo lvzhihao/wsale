@@ -4,13 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"sync"
 
 	"github.com/labstack/echo"
-	"github.com/labstack/gommon/log"
 	"github.com/lvzhihao/goutils"
-	"go.uber.org/zap"
 )
 
 var (
@@ -21,7 +18,7 @@ var (
 type Receive struct {
 	app      *echo.Echo
 	client   *Client
-	Logger   *zap.Logger
+	logger   *goutils.Logger
 	applyMap *sync.Map
 }
 
@@ -34,19 +31,16 @@ type ReceiveApply struct {
 
 func NewReceive() *Receive {
 	app := goutils.NewEcho()
-	var logger *zap.Logger
-	if os.Getenv("DEBUG") == "true" {
-		logger, _ = zap.NewDevelopment()
-		app.Logger.SetLevel(log.DEBUG)
-	} else {
-		logger, _ = zap.NewProduction()
-	}
 	return &Receive{
 		app:      app,
 		client:   NewClient(),
-		Logger:   logger,
+		logger:   goutils.DefaultLogger(),
 		applyMap: new(sync.Map),
 	}
+}
+
+func (c *Receive) SetLogger(logger *goutils.Logger) {
+	c.logger = logger
 }
 
 func (c *Receive) Check(ctx echo.Context) error {
@@ -81,30 +75,30 @@ func (c *Receive) Async(act string, handle func(act, strContext string) error) {
 		channel: make(chan string, DefaultApplyChannelSize),
 	}
 	c.applyMap.Store(act, apply)
-	go apply.Consumer(c.Logger)
+	go apply.Consumer(c.logger)
 }
 
 func (c *Receive) Start(host string) {
-	defer c.Logger.Sync()
+	defer c.logger.Sync()
 	c.app.Any("/*", func(ctx echo.Context) error {
 		act := ctx.QueryParam("act")
 		strContext := ctx.FormValue("strContext")
 		strSign := ctx.FormValue("strSign")
 		err := c.Check(ctx)
 		if err != nil {
-			c.Logger.Error("receive info check error", zap.String("act", act), zap.String("strContext", strContext), zap.String("strSign", strSign))
+			c.logger.Error("receive info check error", "act", act, "strContext", strContext, "strSign", strSign)
 			return ctx.NoContent(http.StatusForbidden)
 		} else {
 			if apply, ok := c.applyMap.Load(act); !ok {
-				c.Logger.Debug("action don't register", zap.String("act", act), zap.String("strContext", strContext), zap.String("strSign", strSign))
+				c.logger.Debug("action don't register", "act", act, "strContext", strContext, "strSign", strSign)
 				return ctx.HTML(http.StatusOK, DefaultWsaleCallbackSuccess)
 			} else {
 				err := apply.(*ReceiveApply).Receive(strContext)
 				if err != nil {
-					c.Logger.Error("receive info failure", zap.Error(err), zap.String("act", act), zap.String("strContext", strContext), zap.String("strSign", strSign))
+					c.logger.Error("receive info failure", "error", err, "act", act, "strContext", strContext, "strSign", strSign)
 					return ctx.HTML(http.StatusInternalServerError, err.Error())
 				} else {
-					c.Logger.Debug("receive info success", zap.String("act", act), zap.String("strContext", strContext), zap.String("strSign", strSign))
+					c.logger.Debug("receive info success", "act", act, "strContext", strContext, "strSign", strSign)
 					return ctx.HTML(http.StatusOK, DefaultWsaleCallbackSuccess)
 				}
 			}
@@ -122,13 +116,13 @@ func (c *ReceiveApply) Receive(strContext string) error {
 	}
 }
 
-func (c *ReceiveApply) Consumer(logger *zap.Logger) {
+func (c *ReceiveApply) Consumer(logger *goutils.Logger) {
 	for {
 		select {
 		case strContext := <-c.channel:
 			err := c.handle(c.act, strContext)
 			if err != nil {
-				logger.Error("sync receive info failure", zap.Error(err), zap.String("act", c.act), zap.String("strContext", strContext))
+				logger.Error("sync receive info failure", "error", err, "act", c.act, "strContext", strContext)
 			}
 		}
 	}
