@@ -2,7 +2,7 @@ package wsalemodels
 
 import (
 	"github.com/jinzhu/gorm"
-	wsalelibs "github.com/lvzhihao/wsale/libs"
+	"github.com/lvzhihao/wsale/wsalelibs"
 )
 
 type Merchant struct {

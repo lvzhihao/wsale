@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	wsalelibs "github.com/lvzhihao/wsale/libs"
+	"github.com/lvzhihao/wsale/wsalelibs"
 )
 
 var (
