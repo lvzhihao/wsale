@@ -14,6 +14,8 @@ func init() {
 type Merchant struct {
 	MerchantNo     string `gorm:"not null;type:varchar(80);unique" json:"merchant_no"` //商户ID
 	MerchantSecret string `gorm:"type:varchar(80)" json:"merchant_secret"`             //商户开发密钥
+	MerchantName   string `gorm:"type:varchar(100)" json:"merchant_name"`              //商户名称
+	IsEnabled      bool   `gorm:"default:false" json:"is_enabled"`                     //是否可用
 }
 
 // 获取商户配置
