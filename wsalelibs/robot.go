@@ -1,5 +1,11 @@
 package wsalelibs
 
+import (
+	"fmt"
+
+	"github.com/lvzhihao/goutils"
+)
+
 type Robot struct {
 	MerchantNo        string `gorm:"not null;type:varchar(80);unique_index:uix_merchant_no_robot_wx_id" json:"merchant_no"`  //商户ID
 	RobotWxId         string `gorm:"not null;type:varchar(100);unique_index:uix_merchant_no_robot_wx_id" json:"robot_wx_id"` //机器人微信ID
@@ -12,4 +18,24 @@ type Robot struct {
 	Status            int32  `gorm:"default:12;index" json:"status"`                                                         //状态: 10:在线 12:离线 14:注销
 	AutoAllowFan      bool   `gorm:"default:false" json:"auto_allow_fan"`                                                    //是否自动通过好友申请
 	AutoAllowChatRoom bool   `gorm:"default:false" json:"auto_allow_chat_room"`                                              //是否自动通过群聊邀请
+}
+
+func RobotConvert(input map[string]interface{}) (robot *Robot, err error) {
+	robot = new(Robot)
+	m := goutils.NewMap(input)
+	var ok bool
+	robot.RobotWxId, ok = m.GetString("vcRobotWxId")
+	if !ok {
+		return nil, fmt.Errorf("vcRobotWxId empty")
+	}
+	robot.NickName, _ = m.GetString("vcNickName")
+	robot.HeadImage, _ = m.GetString("vcHeadImages")
+	robot.WxAlias, _ = m.GetString("vcWxAlias")
+	robot.CodeImage, _ = m.GetString("vcCodeImages")
+	robot.WhatsUp, _ = m.GetString("vcSign")
+	robot.Sex, _ = m.GetInt32("nSex")
+	robot.Status, _ = m.GetInt32("nType")
+	robot.AutoAllowFan, _ = m.GetBool("nIsAllow")
+	robot.AutoAllowChatRoom, _ = m.GetBool("nIsChatRoom")
+	return robot, nil
 }

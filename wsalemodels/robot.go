@@ -12,9 +12,8 @@ type Robot struct {
 }
 
 //初始化一个实例
-func (c *Robot) Ensure() error {
-	//todo
-	return nil
+func (c *Robot) Ensure(db *gorm.DB, robot *wsalelibs.Robot) error {
+	return db.Where(Robot{Robot: *robot}).FirstOrInit(c).Error
 }
 
 type RobotExt struct {

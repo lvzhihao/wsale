@@ -14,3 +14,8 @@ type Merchant struct {
 type MerchantExt struct {
 	//todo
 }
+
+func LoadEnabledMerchants(db *gorm.DB) (ret []Merchant, err error) {
+	err = db.Where("is_enabled = ?", true).Find(&ret).Error
+	return
+}

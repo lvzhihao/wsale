@@ -24,9 +24,9 @@ const (
 )
 
 var (
-	WsaleApiPrefix                     string         = "http://app.wsale.net/Api/InterFace/" //接口地址
-	TimeZone                           string         = "Asia/Shanghai"                       //时区设置
-	TimeLocation                       *time.Location                                         //当前时区
+	WsaleApiPrefix                     string         = "http://app.wsale.net/Api/InterFace" //接口地址
+	TimeZone                           string         = "Asia/Shanghai"                      //时区设置
+	TimeLocation                       *time.Location                                        //当前时区
 	DefaultTransportInsecureSkipVerify bool           = true
 	DefaultTransportDisableCompression bool           = true
 )
@@ -168,6 +168,16 @@ func (c *Client) Action(group, action string, ctx interface{}) (client *Client) 
 		client.AddError(err)
 		client.Value = value
 	}
+	return
+}
+
+// 当前商家信息
+func (c *Client) CurrentM(cur *Merchant) (client *Client) {
+	client = c.clone()
+	if client.Error != nil {
+		return
+	}
+	*cur = *client.Merchant
 	return
 }
 
