@@ -26,7 +26,8 @@ func SyncAccountRobots(iter interface{}) ([]*wsalelibs.Robot, error) {
 	}
 	robots := make([]*wsalelibs.Robot, 0)
 	for _, value := range rst {
-		robot, err := wsalelibs.RobotConvert(value)
+		robot := &wsalelibs.Robot{}
+		err := robot.UnmarshalCode(value)
 		if err != nil {
 			return nil, err
 		} else {

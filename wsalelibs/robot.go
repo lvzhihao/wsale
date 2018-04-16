@@ -1,6 +1,7 @@
 package wsalelibs
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/lvzhihao/goutils"
@@ -18,6 +19,16 @@ type Robot struct {
 	Status            int32  `gorm:"default:12;index" json:"status"`                                                         //状态: 10:在线 12:离线 14:注销
 	AutoAllowFan      bool   `gorm:"default:false" json:"auto_allow_fan"`                                                    //是否自动通过好友申请
 	AutoAllowChatRoom bool   `gorm:"default:false" json:"auto_allow_chat_room"`                                              //是否自动通过群聊邀请
+}
+
+func (c *Robot) UnmarshalCode(iter interface{}) error {
+	var input map[string]interface{}
+	err := json.Unmarshal([]byte(goutils.ToString(iter)), &input)
+	if err != nil {
+		return err
+	}
+	c, err = RobotConvert(input)
+	return err
 }
 
 func RobotConvert(input map[string]interface{}) (robot *Robot, err error) {
