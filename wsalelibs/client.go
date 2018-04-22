@@ -314,9 +314,9 @@ func (c *Client) scan(resp *http.Response, err error) ([]byte, error) {
 	}
 	if goutils.ToString(rst.Result) != "1" {
 		if rst.Error != "" {
-			return nil, fmt.Errorf(rst.Error)
+			return b, fmt.Errorf(rst.Error)
 		} else {
-			return nil, fmt.Errorf("未知错误")
+			return b, fmt.Errorf("未知错误")
 		}
 	}
 	if rst.Data != nil {

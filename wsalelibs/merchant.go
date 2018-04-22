@@ -1,7 +1,9 @@
 package wsalelibs
 
 import (
+	"crypto/md5"
 	"fmt"
+	"strings"
 	"sync"
 )
 
@@ -16,6 +18,18 @@ type Merchant struct {
 	MerchantSecret string `gorm:"type:varchar(80)" json:"merchant_secret"`             //商户开发密钥
 	MerchantName   string `gorm:"type:varchar(100)" json:"merchant_name"`              //商户名称
 	IsEnabled      bool   `gorm:"default:false" json:"is_enabled"`                     //是否可用
+}
+
+func (c *Merchant) Sign(data string) string {
+	return strings.ToLower(fmt.Sprintf("%x", md5.Sum([]byte(c.MerchantSecret+data))))
+}
+
+func (c *Merchant) CheckSign(data, sign string) bool {
+	if strings.Compare(strings.ToLower(sign), c.Sign(data)) == 0 {
+		return true
+	} else {
+		return false
+	}
 }
 
 // 获取商户配置

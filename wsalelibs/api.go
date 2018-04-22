@@ -35,6 +35,26 @@ func (c *Client) SQScanWeiXinLogin() (client *Client) {
 }
 
 /*
+ 获取登陆二维码接口
+ serialNo string 二维码请求ID
+*/
+func (c *Client) SQSancLoginUrlGet(serialNo string) (client *Client) {
+	params := make(map[string]interface{}, 0)
+	params["vcSerialNo"] = serialNo
+	return c.Robot("SQSancLoginUrlGet", params)
+}
+
+/*
+ 获取扫二维码后登陆结果接口
+ id string 扫码登陆ID
+*/
+func (c *Client) SQScanLoginRobotInfo(id string) (client *Client) {
+	params := make(map[string]interface{}, 0)
+	params["Id"] = id
+	return c.Robot("SQScanLoginRobotInfo", params)
+}
+
+/*
  扫码登陆下线后请求重新登陆接口
  robotWxId string 个人号ID
 */

@@ -17,20 +17,20 @@ func init() {
 /*
  * 同步接口数据
  */
-func SyncAccountRobots(iter interface{}) ([]*wsalelibs.Robot, error) {
+func SyncMerchantRobots(merchant *wsalelibs.Merchant) ([]*wsalelibs.Robot, error) {
 	var rst []map[string]interface{}
-	var merchant wsalelibs.Merchant
-	err := client.M(iter).GetAccountList().CurrentM(&merchant).Result(&rst).Error
+	err := client.M(merchant).GetAccountList().Result(&rst).Error
 	if err != nil {
 		return nil, err
 	}
 	robots := make([]*wsalelibs.Robot, 0)
 	for _, value := range rst {
 		robot := &wsalelibs.Robot{}
-		err := robot.UnmarshalCode(value)
+		err := robot.Unmarshal(value)
 		if err != nil {
 			return nil, err
 		} else {
+			//fix merchant no
 			robot.MerchantNo = merchant.MerchantNo
 			robots = append(robots, robot)
 		}
@@ -41,19 +41,20 @@ func SyncAccountRobots(iter interface{}) ([]*wsalelibs.Robot, error) {
 /*
  * 同步接口数据入库
  */
-func SyncAccountRobotsDatabase(iter interface{}, db *gorm.DB) ([]*wsalemodels.Robot, error) {
-	robots, err := SyncAccountRobots(iter)
+func SyncMerchantRobotsDatabase(db *gorm.DB, merchant *wsalelibs.Merchant) ([]*wsalemodels.Robot, error) {
+	robots, err := SyncMerchantRobots(merchant)
 	if err != nil {
 		return nil, err
 	}
 	mdls := make([]*wsalemodels.Robot, 0)
 	for _, robot := range robots {
 		mdl := &wsalemodels.Robot{}
-		err := mdl.Ensure(db, robot) //确认数据库记录
+		err := mdl.Ensure(db, robot.MerchantNo, robot.RobotWxId) //确认数据库记录
 		if err != nil {
 			return mdls, err
 		}
-		err = db.Save(&mdl).Error //更新记录
+		mdl.Robot = *robot
+		err = db.Save(mdl).Error //更新记录
 		if err != nil {
 			return mdls, err
 		}

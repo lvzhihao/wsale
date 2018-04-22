@@ -1,6 +1,10 @@
 package wsalelibs
 
-import "github.com/lvzhihao/goutils"
+import (
+	"strings"
+
+	"github.com/lvzhihao/goutils"
+)
 
 /*
  获取个人号好友列表接口
@@ -34,4 +38,18 @@ func (c *Client) SQChatRoomUserList(chatRoomId string) (client *Client) {
 	params := make(map[string]interface{}, 0)
 	params["vcChatRoomId"] = chatRoomId
 	return c.Chat("SQChatRoomUserList", params)
+}
+
+/*
+ 好友入群邀请接口
+ ChatRoomId string 群ID
+ RobotWxId string 设备ID
+ FansWxIdList []string 好友ID
+*/
+func (c *Client) SQChatRoomRobotJoinRoom(chatRoomId, robotWxId string, fansWxIdList []string) (client *Client) {
+	params := make(map[string]interface{}, 0)
+	params["vcChatRoomId"] = chatRoomId
+	params["vcRobotWxId"] = robotWxId
+	params["vcFans"] = strings.Join(fansWxIdList, ",")
+	return c.Chat("SQChatRoomRobotJoinRoom", params)
 }
