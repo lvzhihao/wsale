@@ -1,26 +1,29 @@
 package wsalelibs
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/lvzhihao/goutils"
 )
 
 const (
-	MSG_TYPE_TEXT  string = "2001" //文字
-	MSG_TYPE_IMAGE string = "2002" //图片
-	MSG_TYPE_VOICE string = "2003" //语音
-	MSG_TYPE_LINK  string = "2005" //链接
-	MSG_TYPE_CARD  string = "2006" //名片
-	MSG_TYPE_MINI  string = "2013" //小程序
+	MSG_TYPE_TEXT  int32 = 2001 //文字
+	MSG_TYPE_IMAGE int32 = 2002 //图片
+	MSG_TYPE_VOICE int32 = 2003 //语音
+	MSG_TYPE_LINK  int32 = 2005 //链接
+	MSG_TYPE_CARD  int32 = 2006 //名片
+	MSG_TYPE_MINI  int32 = 2013 //小程序
 )
 
 type SendMessage struct {
 	Merchant   *Merchant      `json:"merchant"`     //商家编号
 	RobotWxId  string         `json:"robot_wx_id"`  //个人号微信ID
 	NickName   string         `json:"nick_name"`    //个人号昵称
-	Source     int8           `json:"source"`       //10：私聊 11：群聊
+	Source     int32          `json:"source"`       //10：私聊 11：群聊
 	Data       []*MessageData `json:"data"`         //发送消息内容
 	ChatRoomId string         `json:"chat_room_id"` //群ID
 	FansWxId   []string       `json:"fans_wx_id"`   //好友ID，群聊时为@好友列表
@@ -76,8 +79,9 @@ func (c *SendMessage) Fans(fansWxId string) *SendMessage {
 
 func (c *SendMessage) AddText(text string) (send *SendMessage) {
 	data := &MessageData{
-		MsgType: MSG_TYPE_TEXT,
-		Content: text,
+		MsgType:       MSG_TYPE_TEXT,
+		Content:       text,
+		ContentBase64: base64.StdEncoding.EncodeToString([]byte(text)),
 	}
 	return c.AddData(data)
 }
@@ -176,29 +180,15 @@ func (c *SendMessage) Format() (rst map[string]interface{}, err error) {
 	return
 }
 
-type ReceiveMessage struct {
-	Merchant string                `json:"merchant_no"`
-	Data     []*ReceiveMessageData `json:"data"`
-}
-
-type ReceiveMessageData struct {
-	MessageData
-	SendType   string `json:"send_type"`    //消息类型（10:用户消息）
-	Source     string `json:"source"`       //10：私聊 11：群聊
-	RobotWxId  string `json:"robot_wx_id"`  //个人号微信ID
-	ChatRoomId string `json:"chat_room_id"` //群ID
-	FansWxId   string `json:"fans_wx_id"`   //好友微信ID
-	FansType   string `json:"fans_type"`    //好友微信类型（10:用户消息）
-}
-
 type MessageData struct {
 	MsgId         string `json:"msg_id"`         //消息唯一ID
-	MsgType       string `json:"msg_type"`       //2001:文字 2002:图片 2003:语音 2005:链接 2006:名片
+	MsgType       int32  `json:"msg_type"`       //2001:文字 2002:图片 2003:语音 2005:链接 2006:名片
 	Content       string `json:"content"`        //消息内容、链接标题
+	ContentBase64 string `json:"content_base64"` //消息内容Base64
 	Image         string `json:"image"`          //图片地址，链接图片
 	Link          string `json:"link"`           //链接地址，语音地址
 	Desc          string `json:"desc"`           //链接描述
-	MediaDuration int8   `json:"meida_duration"` //资源长度，单位秒
+	MediaDuration int8   `json:"media_duration"` //资源长度，单位秒
 }
 
 func (c *MessageData) Format() (rst map[string]interface{}) {
@@ -206,9 +196,80 @@ func (c *MessageData) Format() (rst map[string]interface{}) {
 	rst["vcMsgId"] = c.MsgId
 	rst["snMsgType"] = c.MsgType
 	rst["vcContent"] = c.Content
+	if c.MsgType == MSG_TYPE_TEXT {
+		rst["vcBase64Content"] = c.ContentBase64
+	} // 消息内容，base64编码（仅用于snMsgType=2001）详见文档
 	rst["vcUrl"] = c.Link
 	rst["vcImg"] = c.Image
 	rst["vcLinkDesc"] = c.Desc
 	rst["inDuration"] = int(c.MediaDuration)
 	return
+}
+
+func (c *MessageData) Unmarshal(iter interface{}) error {
+	return MessageDataUnmarshal(iter, c)
+}
+
+func MessageDataUnmarshal(iter interface{}, msg *MessageData) error {
+	var input map[string]interface{}
+	err := json.Unmarshal([]byte(goutils.ToString(iter)), &input)
+	if err != nil {
+		return err
+	}
+	m := goutils.NewMap(input)
+	id, ok := m.GetString("vcMsgId")
+	if !ok {
+		return fmt.Errorf("vcMsgId empty")
+	}
+	msg.MsgId = id
+	msg.MsgType, _ = m.GetInt32("snMsgType")
+	msg.ContentBase64, _ = m.GetString("vcContent")
+	if content, err := base64.StdEncoding.DecodeString(msg.ContentBase64); err == nil {
+		msg.Content = goutils.ToString(content)
+	} // save origin text
+	msg.Image, _ = m.GetString("vcImg")
+	msg.Link, _ = m.GetString("vcUrl")
+	msg.Desc, _ = m.GetString("vcLinkDesc")
+	duration, _ := m.GetInt32("inDuration")
+	msg.MediaDuration = int8(duration)
+	return nil
+}
+
+type ReceiveMessage struct {
+	MerchantNo string    `json:"merchant_no"`  //商户号
+	SendType   int32     `json:"send_type"`    //消息类型（10:用户消息）
+	MsgDate    time.Time `json:"msg_date"`     //消息时间
+	Source     int32     `json:"source"`       //10：私聊 11：群聊
+	RobotWxId  string    `json:"robot_wx_id"`  //个人号微信ID
+	ChatRoomId string    `json:"chat_room_id"` //群ID
+	FansWxId   string    `json:"fans_wx_id"`   //好友微信ID
+	FansType   int32     `json:"fans_type"`    //好友微信类型（10:用户消息）
+	MessageData
+}
+
+func (c *ReceiveMessage) Unmarshal(iter interface{}) error {
+	return ReceiveMessageUnmarshal(iter, c)
+}
+
+func ReceiveMessageUnmarshal(iter interface{}, msg *ReceiveMessage) error {
+	err := msg.MessageData.Unmarshal(iter)
+	if err != nil {
+		return err
+	}
+	var input map[string]interface{}
+	err = json.Unmarshal([]byte(goutils.ToString(iter)), &input)
+	if err != nil {
+		return err
+	}
+	m := goutils.NewMap(input)
+	msg.SendType, _ = m.GetInt32("snSendType")
+	msg.Source, _ = m.GetInt32("inSource")
+	msg.RobotWxId, _ = m.GetString("vcRobotWxID")
+	msg.ChatRoomId, _ = m.GetString("vcChatRoomID")
+	msg.FansWxId, _ = m.GetString("vcCustomerWxID")
+	msg.FansType, _ = m.GetInt32("nCustomerType")
+	if t, ok := m.GetString("dtMsgTime"); ok {
+		msg.MsgDate, _ = time.ParseInLocation("2006/1/2 15:04:05", t, TimeLocation)
+	}
+	return nil
 }

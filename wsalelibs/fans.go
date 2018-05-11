@@ -1,6 +1,7 @@
 package wsalelibs
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -48,7 +49,13 @@ func FansUnmarshal(iter interface{}, fans *Fans) error {
 	fans.FansWxId = fansWxId
 	fans.UserName, _ = m.GetString("vcUserName")
 	fans.NickName, _ = m.GetString("vcNickName")
-	fans.NickNameBase64, _ = m.GetString("vcBase64NickName")
+	if fans.NickNameBase64, ok = m.GetString("vcBase64NickName"); ok {
+		// preferred to use base64decode
+		decode, err := base64.StdEncoding.DecodeString(fans.NickNameBase64)
+		if err == nil {
+			fans.NickName = goutils.ToString(decode)
+		}
+	}
 	fans.HeadImages, _ = m.GetString("vcHeadImages")
 	fans.WxAlias, _ = m.GetString("vcWxAlias")
 	fans.WhatsUp, _ = m.GetString("vcPslSignature")
@@ -56,7 +63,102 @@ func FansUnmarshal(iter interface{}, fans *Fans) error {
 	fans.Proinvice, _ = m.GetString("vcProinvice")
 	fans.City, _ = m.GetString("vcCity")
 	fans.WsaleTags, _ = m.GetString("vcTags")
-	// todo
-	//fans.FollowDate, _ = xxx
+	if t, ok := m.GetString("dtCreateDate"); ok {
+		fans.FollowDate, _ = time.ParseInLocation("2006-01-02T15:04:05.999", t, TimeLocation)
+	}
+
+	return nil
+}
+
+type FansTags struct {
+	MerchantNo string   `json:"merchant_no"` //商户ID
+	RobotWxId  string   `json:"robot_wx_id"` //机器人微信ID
+	FansWxId   string   `json:"fans_wx_id"`  //好友微信ID
+	Tags       []string `json:"tags"`        //线下标签
+}
+
+func FansTagsMapUnmarshal(iter interface{}) (map[string]*FansTags, error) {
+	fansTagsList := make(map[string]*FansTags, 0)
+	var input map[string]interface{}
+	err := json.Unmarshal([]byte(goutils.ToString(iter)), &input)
+	if err != nil {
+		return nil, err
+	}
+	m := goutils.NewMap(input)
+	robotWxId, ok := m.GetString("vcRobotWxId")
+	if !ok {
+		return nil, fmt.Errorf("vcRobotWxId empty")
+	}
+	data, ok := m.GetSlice("tagData")
+	if !ok {
+		return nil, fmt.Errorf("tagData empty")
+	}
+	for _, tag := range data {
+		var info map[string]interface{}
+		err := json.Unmarshal([]byte(goutils.ToString(tag)), &info)
+		if err != nil {
+			continue
+		}
+		m := goutils.NewMap(info)
+		fansWxId, _ := m.GetString("vcFansWxId")
+		tagName, _ := m.GetString("vcTagName")
+		index := robotWxId + ">>" + fansWxId
+		obj, ok := fansTagsList[index]
+		if ok {
+			obj.Tags = append(obj.Tags, tagName)
+		} else {
+			fansTagsList[index] = &FansTags{
+				RobotWxId: robotWxId,
+				FansWxId:  fansWxId,
+				Tags:      []string{tagName},
+			}
+		}
+	}
+	return fansTagsList, nil
+}
+
+type FansInvite struct {
+	MerchantNo     string    `gorm:"not null;type:varchar(80);index" json:"merchant_no"` //商户ID
+	RobotWxId      string    `gorm:"not null;type:varchar(80);index" json:"robot_wx_id"` //机器人微信ID
+	FansWxId       string    `gorm:"not null;type:varchar(80);index "json:"fans_wx_id"`  //好友微信ID
+	HeadImage      string    `gorm:"type:varchar(500); json:"head_image"`                //关像
+	NickName       string    `gorm:"not null;type:varchar(100)" json:"nick_name`         //昵称
+	RequestText    string    `gorm:"type:varchar(200)" json:"request_text"`              //验证语
+	RequestDate    time.Time `json:"request_date"`                                       //请求时间
+	Source         string    `gorm:"type:varchar(50)" json:"source"`                     //来源
+	RequestPackage string    `gorm:"not null;type:text" json:"request_package"`          //请求包，同意加好友使用
+	FansStatus     int32     `json:"fans_status"`                                        // 1 已经添加 2 未同意 3 同意失败
+}
+
+func (c *FansInvite) Unmarshal(iter interface{}) error {
+	return FansInviteUnmarshal(iter, c)
+}
+
+func FansInviteUnmarshal(iter interface{}, invite *FansInvite) error {
+	var input map[string]interface{}
+	err := json.Unmarshal([]byte(goutils.ToString(iter)), &input)
+	if err != nil {
+		return err
+	}
+	m := goutils.NewMap(input)
+	robotWxId, ok := m.GetString("vcRobotWxId")
+	if !ok {
+		return fmt.Errorf("vcRobotWxId empty")
+	}
+	fansWxId, ok := m.GetString("vcFansWxId")
+	if !ok {
+		return fmt.Errorf("vcFansWxId empty")
+	}
+	invite.RobotWxId = robotWxId
+	invite.FansWxId = fansWxId
+	invite.NickName, _ = m.GetString("vcNickName")
+	invite.HeadImage, _ = m.GetString("vcHeadImage")
+	invite.RequestText, _ = m.GetString("vcRequestText")
+	invite.Source, _ = m.GetString("vcSource")
+	invite.RequestPackage, _ = m.GetString("vcRequestPackage")
+	invite.FansStatus, _ = m.GetInt32("nIsFans")
+	if t, ok := m.GetString("dtSendDate"); ok {
+		invite.RequestDate, _ = time.ParseInLocation("2006-01-02T15:04:05", t, TimeLocation)
+	}
 	return nil
 }

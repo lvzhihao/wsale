@@ -166,7 +166,7 @@ func (c *Client) SQRobotUpdateIsAllow(isAllow bool, robotWxIdList []string) (cli
  robotWxId string 个人号ID
  fansData []string 好友微信ID
 */
-func (c *Client) GetRobotFansTag(robotWxId string, FansWxId []string) (client *Client) {
+func (c *Client) GetRobotFansTags(robotWxId string, FansWxId []string) (client *Client) {
 	params := make(map[string]interface{}, 0)
 	params["vcRobotWxId"] = robotWxId
 	params["vcReturnUrl"] = "apiRequest"
