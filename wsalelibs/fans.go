@@ -121,12 +121,12 @@ type FansInvite struct {
 	MerchantNo     string    `gorm:"not null;type:varchar(80);index" json:"merchant_no"` //商户ID
 	RobotWxId      string    `gorm:"not null;type:varchar(80);index" json:"robot_wx_id"` //机器人微信ID
 	FansWxId       string    `gorm:"not null;type:varchar(80);index "json:"fans_wx_id"`  //好友微信ID
-	HeadImage      string    `gorm:"type:varchar(500); json:"head_image"`                //关像
 	NickName       string    `gorm:"not null;type:varchar(100)" json:"nick_name`         //昵称
+	HeadImage      string    `gorm:"type:varchar(500); json:"head_image"`                //关像
 	RequestText    string    `gorm:"type:varchar(200)" json:"request_text"`              //验证语
 	RequestDate    time.Time `json:"request_date"`                                       //请求时间
 	Source         string    `gorm:"type:varchar(50)" json:"source"`                     //来源
-	RequestPackage string    `gorm:"not null;type:text" json:"request_package"`          //请求包，同意加好友使用
+	RequestPackage string    `gorm:"type:text" json:"request_package"`                   //请求包，同意加好友使用
 	FansStatus     int32     `json:"fans_status"`                                        // 1 已经添加 2 未同意 3 同意失败
 }
 
@@ -160,5 +160,37 @@ func FansInviteUnmarshal(iter interface{}, invite *FansInvite) error {
 	if t, ok := m.GetString("dtSendDate"); ok {
 		invite.RequestDate, _ = time.ParseInLocation("2006-01-02T15:04:05", t, TimeLocation)
 	}
+	return nil
+}
+
+type FansAgreeResult struct {
+	MerchantNo string `gorm:"not null;type:varchar(80);index" json:"merchant_no"` //商户ID
+	RobotWxId  string `gorm:"not null;type:varchar(80);index" json:"robot_wx_id"` //机器人微信ID
+	FansWxId   string `gorm:"not null;type:varchar(80);index "json:"fans_wx_id"`  //好友微信ID
+	Result     int32  `json:"result"`                                             //请求结果 1 添加成功 0 添加失败
+}
+
+func (c *FansAgreeResult) Unmarshal(iter interface{}) error {
+	return FansAgreeResultUnmarshal(iter, c)
+}
+
+func FansAgreeResultUnmarshal(iter interface{}, result *FansAgreeResult) error {
+	var input map[string]interface{}
+	err := json.Unmarshal([]byte(goutils.ToString(iter)), &input)
+	if err != nil {
+		return err
+	}
+	m := goutils.NewMap(input)
+	robotWxId, ok := m.GetString("vcRobotWxId")
+	if !ok {
+		return fmt.Errorf("vcRobotWxId empty")
+	}
+	fansWxId, ok := m.GetString("vcFansWxId")
+	if !ok {
+		return fmt.Errorf("vcFansWxId empty")
+	}
+	result.RobotWxId = robotWxId
+	result.FansWxId = fansWxId
+	result.Result, _ = m.GetInt32("nResult")
 	return nil
 }
