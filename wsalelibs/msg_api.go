@@ -16,6 +16,22 @@ func (c *Client) SendMessage(sendMessage *SendMessage) (client *Client) {
 }
 
 /*
+ 发送小程序接口
+ sendMiniApp *SendMiniApp 消息体
+*/
+func (c *Client) SendMiniApp(sendMiniApp *SendMiniApp) (client *Client) {
+	client = c.clone()
+	sendMiniApp.M(c.Merchant)
+	msg, err := sendMiniApp.FormatMiniApp()
+	if err != nil {
+		client.AddError(err)
+	} else {
+		client = c.Msg("SendCustomMiniApps", msg)
+	}
+	return
+}
+
+/*
  获取原图接口
  msgId string 消息唯一ID
 */
@@ -23,6 +39,16 @@ func (c *Client) GetOriginalImg(msgId string) (client *Client) {
 	params := make(map[string]interface{}, 0)
 	params["vcMsgId"] = msgId
 	return c.Msg("GetOriginalImg", params)
+}
+
+/*
+ 获取视频接口
+ msgId string 消息唯一ID
+*/
+func (c *Client) GetVideo(msgId string) (client *Client) {
+	params := make(map[string]interface{}, 0)
+	params["vcMsgId"] = msgId
+	return c.Msg("GetVideo", params)
 }
 
 /*

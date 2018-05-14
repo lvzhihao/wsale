@@ -113,15 +113,19 @@ func (c *SendMessage) AddLink(link, img, desc string) *SendMessage {
 	return c.AddData(data)
 }
 
-func (c *SendMessage) AddCard() *SendMessage {
-	//todo
-	return c
+func (c *SendMessage) AddCard(cardInfo string) *SendMessage {
+	data := &MessageData{
+		MsgType: MSG_TYPE_CARD,
+		Content: cardInfo,
+	}
+	return c.AddData(data)
 }
 
+// 发送小程序改为了单独接口，此接口不推荐使用
 func (c *SendMessage) AddMini(appId string) *SendMessage {
 	data := &MessageData{
 		MsgType: MSG_TYPE_MINI,
-		Link:    appId,
+		Content: appId,
 	}
 	return c.AddData(data)
 }
@@ -171,7 +175,7 @@ func (c *SendMessage) Format() (rst map[string]interface{}, err error) {
 		if data.MsgType == MSG_TYPE_MINI {
 			// 如果有小程序，则只发送小程序，兼容接口业务方包装
 			delete(rst, "data")
-			rst["vcAppId"] = data.Link
+			rst["vcAppId"] = data.Content
 			break
 		} else {
 			rst["data"] = append(rst["data"].([]interface{}), data.Format())
@@ -272,4 +276,69 @@ func ReceiveMessageUnmarshal(iter interface{}, msg *ReceiveMessage) error {
 		msg.MsgDate, _ = time.ParseInLocation("2006/1/2 15:04:05", t, TimeLocation)
 	}
 	return nil
+}
+
+type SendMessageResult struct {
+	MerchantNo string    `gorm:"not null;type:varchar(80);index" json:"merchant_no"` //商户ID
+	MsgId      string    `gorm:"not null;type:varchar(100);index" json:"msg_id"`     //消息唯一ID
+	WxMsgId    string    `gorm:"not null;type:varchar(100);index" json:"wx_msg_id"`  //微信消息ID
+	Type       int32     `json:"type"`                                               //结果 10:成功 11:失败
+	MsgDate    time.Time `json:"msg_date"`                                           //消息发送时间
+}
+
+func (c *SendMessageResult) Unmarshal(iter interface{}) error {
+	return SendMessageResultUnmarshal(iter, c)
+}
+
+func SendMessageResultUnmarshal(iter interface{}, rst *SendMessageResult) error {
+	var input map[string]interface{}
+	err := json.Unmarshal([]byte(goutils.ToString(iter)), &input)
+	if err != nil {
+		return err
+	}
+	m := goutils.NewMap(input)
+	rst.MsgId, _ = m.GetString("vcMsgId")
+	rst.WxMsgId, _ = m.GetString("vcWxMsgId")
+	rst.Type, _ = m.GetInt32("inType")
+	if t, ok := m.GetInt64("dtMsgTime"); ok {
+		rst.MsgDate = time.Unix(t, 0).In(TimeLocation)
+	}
+	return nil
+}
+
+type SendMiniApp struct {
+	SendMessage
+	MsgId      string `json:"msg_id"`      // 消息唯一ID
+	AppId      string `json:"app_id"`      // 小程序appID
+	WxGZH      string `json:"wx_gzh"`      // 小程序公众号
+	AppTitle   string `json:"app_title"`   // 小程序标题
+	AppName    string `json:"app_name"`    // 小程序名称
+	SmallImage string `json:"small_image"` // 小程序小图
+	BigImage   string `json:"big_image"`   // 小程序大图
+	PagePath   string `json:"page_path"`   // 小程序页面路径
+}
+
+// todo other set
+func (c *SendMiniApp) SetAppId(appId string) *SendMiniApp {
+	c.MsgId = goutils.RandStr(20)
+	c.AppId = appId
+	return c
+}
+
+func (c *SendMiniApp) FormatMiniApp() (rst map[string]interface{}, err error) {
+	c.Data = make([]*MessageData, 0)
+	rst, err = c.SendMessage.Format()
+	if err != nil {
+		return
+	}
+	delete(rst, "data")
+	rst["vcMsgId"] = c.MsgId
+	rst["vcAppId"] = c.AppId
+	rst["vcWxGzh"] = c.WxGZH
+	rst["vcAppTitle"] = c.AppTitle
+	rst["vcAppName"] = c.AppName
+	rst["vcSmallImg"] = c.SmallImage
+	rst["vcBigImg"] = c.BigImage
+	rst["vcPagePath"] = c.PagePath
+	return rst, nil
 }
