@@ -145,22 +145,6 @@ func (c *Client) SQRobotUpdateArea(area string, robotWxIdList []string) (client 
 }
 
 /*
- 设置是否自动通过好友申请接口
- isAllow bool 是否自动同意邀请入群，1是（开启），0否（关闭
- robotWxIdList []string 个号人ID列表
-*/
-func (c *Client) SQRobotUpdateIsAllow(isAllow bool, robotWxIdList []string) (client *Client) {
-	params := make(map[string]interface{}, 0)
-	if isAllow {
-		params["isAllow"] = "1"
-	} else {
-		params["isAllow"] = "0"
-	}
-	params["tbRobotList"] = robotWxIdList
-	return c.Robot("SQRobotUpdateIsAllow", params)
-}
-
-/*
  获取线下标签
  可通过该接口获取手机上个人号的标签。(通过回调地址返回数据)
  robotWxId string 个人号ID
@@ -218,4 +202,21 @@ func (c *Client) PushAgreeFriendsRequest(robotWxId, fansWxId string) (client *Cl
 	params["vcRobotWxId"] = robotWxId
 	params["vcFansWxId"] = fansWxId
 	return c.Robot("PushAgreeFriendsRequest", params)
+}
+
+/*
+ 设置是否自动通过好友申请接口
+ robotWxIdList []string 设备号
+ allow bool 是否自动同意
+*/
+
+func (c *Client) SQRobotUpdateIsAllow(robotWxIdList []string, allow bool) (client *Client) {
+	params := make(map[string]interface{}, 0)
+	params["tbRobotList"] = robotWxIdList
+	if allow {
+		params["isAllow"] = "1"
+	} else {
+		params["isAllow"] = "0"
+	}
+	return c.Robot("SQRobotUpdateIsAllow", params)
 }

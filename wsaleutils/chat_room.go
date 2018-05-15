@@ -48,6 +48,7 @@ func SyncRobotChatRoomsDatabase(db *gorm.DB, merchant *wsalelibs.Merchant, robot
 	if err != nil {
 		return nil, err
 	}
+	// todo check robot in status
 	mdls := make([]*wsalemodels.ChatRoom, 0)
 	for _, chatRoom := range list {
 		mdl := &wsalemodels.ChatRoom{}

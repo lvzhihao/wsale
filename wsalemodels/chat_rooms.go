@@ -32,5 +32,5 @@ func GetChatRoomsByRobot(db *gorm.DB, merchantNo, robotWxId string, finder *Find
 }
 
 type ChatRoomExt struct {
-	//todo
+	RobotInStatus bool `gorm:"default:true" json:"robot_in_status"` // 设备是否在群内
 }
