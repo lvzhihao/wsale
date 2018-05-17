@@ -2,6 +2,7 @@ package wsaleutils
 
 import (
 	"github.com/jinzhu/gorm"
+	"github.com/lvzhihao/goutils"
 	"github.com/lvzhihao/wsale/wsalelibs"
 	"github.com/lvzhihao/wsale/wsalemodels"
 )
@@ -48,8 +49,13 @@ func SyncRobotChatRoomsDatabase(db *gorm.DB, merchant *wsalelibs.Merchant, robot
 	if err != nil {
 		return nil, err
 	}
-	// todo check robot in status
+	var olds []wsalemodels.ChatRoom
+	err = db.Where("merchant_no = ?", merchant.MerchantNo).Where("robot_wx_id = ?", robotWxId).Where("robot_in_status = ?", true).Find(&olds).Error
+	if err != nil {
+		return nil, err
+	}
 	mdls := make([]*wsalemodels.ChatRoom, 0)
+	ids := make([]string, 0)
 	for _, chatRoom := range list {
 		mdl := &wsalemodels.ChatRoom{}
 		err := mdl.Ensure(db, chatRoom.MerchantNo, chatRoom.RobotWxId, chatRoom.ChatRoomId) //确认数据库记录
@@ -57,11 +63,20 @@ func SyncRobotChatRoomsDatabase(db *gorm.DB, merchant *wsalelibs.Merchant, robot
 			return mdls, err
 		}
 		mdl.ChatRoom = *chatRoom //更新数据
+		mdl.RobotInStatus = true //设备状态为在群内
 		err = db.Save(mdl).Error //更新记录
 		if err != nil {
 			return mdls, err
 		}
 		mdls = append(mdls, mdl)
+		ids = append(ids, mdl.ChatRoomId)
+	}
+	for _, old := range olds {
+		if goutils.InStringSlice(ids, old.ChatRoomId) {
+			continue
+		}
+		old.RobotInStatus = false
+		db.Save(old) //设置状态为不在群内
 	}
 	return mdls, nil
 }

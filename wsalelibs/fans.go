@@ -194,3 +194,73 @@ func FansAgreeResultUnmarshal(iter interface{}, result *FansAgreeResult) error {
 	result.Result, _ = m.GetInt32("nResult")
 	return nil
 }
+
+/*
+ * 好友来源及状态，异步回调获取
+ */
+type FansSourceStatus struct {
+	MerchantNo string `json:"merchant_no"` //商户ID
+	RobotWxId  string `json:"robot_wx_id"` //机器人微信ID
+	FansWxId   string `json:"fans_wx_id"`  //好友微信ID
+	Source     string `json:"source"`      //来源
+	IsDeleted  bool   `json:"is_deleted"`  //好友是否已经删除个人号
+}
+
+/*
+ * 回调解码，单条数据，详见个人号开发文档
+ */
+func (c *FansSourceStatus) Unmarshal(merchantNo, robotWxId string, iter interface{}) error {
+	return FansSourceStatusUnmarshal(merchantNo, robotWxId, iter, c)
+}
+
+func FansSourceStatusUnmarshal(merchantNo, robotWxId string, iter interface{}, result *FansSourceStatus) error {
+	var input map[string]interface{}
+	err := json.Unmarshal([]byte(goutils.ToString(iter)), &input)
+	if err != nil {
+		return err
+	}
+	result.MerchantNo = merchantNo
+	result.RobotWxId = robotWxId
+	m := goutils.NewMap(input)
+	fansWxId, ok := m.GetString("vcFansWxId")
+	if !ok {
+		return fmt.Errorf("vcFansWxId empty")
+	}
+	result.FansWxId = fansWxId
+	result.Source, _ = m.GetString("vcSource")
+	result.IsDeleted, _ = m.GetBool("nIsDelFans")
+	return nil
+}
+
+type FansSourceStatusCallbackStruct struct {
+	RobotWxId string        `json:"vcRobotWxId"`
+	Data      []interface{} `json:"vcSource"`
+}
+
+/*
+ * 回调解析
+ */
+func FansSourceStatusCallback(iter interface{}) (ret []*FansSourceStatus, err error) {
+	ret = make([]*FansSourceStatus, 0)
+	rst := new(Callback)
+	err = rst.Unmarshal(iter)
+	if err != nil {
+		return
+	}
+	for _, data := range rst.Each() {
+		var callback FansSourceStatusCallbackStruct
+		err = json.Unmarshal([]byte(goutils.ToString(data)), &callback)
+		if err != nil {
+			return
+		}
+		for _, iter := range callback.Data {
+			obj := new(FansSourceStatus)
+			err = FansSourceStatusUnmarshal(rst.MerchantNo, callback.RobotWxId, iter, obj)
+			if err != nil {
+				return
+			}
+			ret = append(ret, obj)
+		}
+	}
+	return
+}

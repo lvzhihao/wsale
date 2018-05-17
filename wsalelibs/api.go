@@ -1,5 +1,7 @@
 package wsalelibs
 
+import "strings"
+
 /*
  获取个人号列表接口
  robotWxId string 个人号ID，不传时查询商家下所有个人号
@@ -219,4 +221,17 @@ func (c *Client) SQRobotUpdateIsAllow(robotWxIdList []string, allow bool) (clien
 		params["isAllow"] = "0"
 	}
 	return c.Robot("SQRobotUpdateIsAllow", params)
+}
+
+/*
+ 获取好友来源和是否被删除
+ 可通过该接口获取个人号好友来源和是否被删除。(通过回调地址返回数据)
+ robotWxId string 个人号ID
+ vcFansList []string 好友微信ID
+*/
+func (c *Client) SQPushSourceByWxId(robotWxId string, FansWxId []string) (client *Client) {
+	params := make(map[string]interface{}, 0)
+	params["vcRobotWxId"] = robotWxId
+	params["vcFansList"] = strings.Join(FansWxId, ",")
+	return c.Robot("SQ_PushSourceByWxId", params)
 }
