@@ -141,3 +141,80 @@ func (c *Client) SQChatRoomSetExit(robotWxId string, chatRoomIdList []string) (c
 	params["aryChatRoomId"] = chatRoomIdList
 	return c.Chat("SQChatRoomSetExit", params)
 }
+
+/*
+ 请求群内踢人接口
+ chatRoomId string 群ID
+ robotWxId string 设备号
+ fansWxId stsring  群好友ID
+*/
+func (c *Client) SQPushChatroomRemoveFans(chatRoomId, robotWxId, fansWxId string) (client *Client) {
+	params := make(map[string]interface{}, 0)
+	params["vcChatRoomId"] = chatRoomId
+	params["vcRobotWxId"] = robotWxId
+	params["vcFansWxId"] = fansWxId
+	return c.Chat("SQPushChatroomRemoveFans", params)
+}
+
+/*
+ 邀请好友请求建群接口
+ robotWxId string 设备号
+ chatRoomName string 群名称
+ fansWxIdList []stsring  群好友ID列表
+ flag int32 建群好友选择类型：0所有好友；1随机3-8个好友
+ code int32 起始编号
+ num  int32 建群个数，默认1
+*/
+
+func (c *Client) SQPullChatRoomByFriends(robotWxId, chatRoomName string, fansWxIdList []string, flag, code, num int32) (client *Client) {
+	params := make(map[string]interface{}, 0)
+	params["vcRobotWxId"] = robotWxId
+	params["vcChatRoomName"] = chatRoomName
+	params["vcFrinds"] = strings.Join(fansWxIdList, ";")
+	switch flag {
+	case 0:
+	case 1:
+	default:
+		flag = 0
+	}
+	if num == 0 {
+		num = 1
+	}
+	params["vcType"] = flag
+	params["vcCode"] = code
+	params["vcNum"] = num
+	return c.Chat("SQPullChatRoomByFriends", params)
+}
+
+/*
+ 获取邀请好友建群结果接口
+ ids []string 编号
+*/
+func (c *Client) SQChatRoomPullList(ids []string) (client *Client) {
+	params := make(map[string]interface{}, 0)
+	params["nIds"] = strings.Join(ids, ",")
+	return c.Chat("SQChatRoomPullList", params)
+}
+
+/*
+ 面对面请求建群接口
+ robotWxId string 设备号
+ chatRoomName string 群名称
+*/
+
+func (c *Client) SQChatRoomFace(robotWxId, chatRoomName string) (client *Client) {
+	params := make(map[string]interface{}, 0)
+	params["vcRobotWxId"] = robotWxId
+	params["vcChatRoomName"] = chatRoomName
+	return c.Chat("SQChatRoomFace", params)
+}
+
+/*
+ 获取面对面建群二维码接口
+ id string 编号
+*/
+func (c *Client) SQChatRoomFaceGetCodeImage(id string) (client *Client) {
+	params := make(map[string]interface{}, 0)
+	params["nId"] = id
+	return c.Chat("SQChatRoomFaceGetCodeImage", params)
+}

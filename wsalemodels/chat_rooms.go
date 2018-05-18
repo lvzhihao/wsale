@@ -31,6 +31,11 @@ func GetChatRoomsByRobot(db *gorm.DB, merchantNo, robotWxId string, finder *Find
 	return
 }
 
+func UpdateChatRoomMembersCount(db *gorm.DB, chatRoomId string, count int) error {
+	return db.Model(&ChatRoom{}).Where("chat_room_id = ?", chatRoomId).Update("members_count", int32(count)).Error
+}
+
 type ChatRoomExt struct {
-	RobotInStatus bool `gorm:"default:true" json:"robot_in_status"` // 设备是否在群内
+	RobotInStatus bool  `gorm:"default:true" json:"robot_in_status"` // 设备是否在群内
+	MembersCount  int32 `gorm:"default:0" json:"members_count"`      // 群成员总数
 }
