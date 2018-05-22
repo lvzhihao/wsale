@@ -37,8 +37,9 @@ func LoadMerchant(key string) (*Merchant, error) {
 	iter, ok := merchantMaps.Load(key)
 	if ok {
 		switch iter.(type) {
-		case *Merchant:
-			return iter.(*Merchant), nil
+		case Merchant:
+			m := iter.(Merchant)
+			return &m, nil
 		default:
 			return nil, fmt.Errorf("Merchant don't enabled")
 		}
@@ -48,7 +49,7 @@ func LoadMerchant(key string) (*Merchant, error) {
 }
 
 // 启用商户
-func EnableMerchant(m *Merchant) {
+func EnableMerchant(m Merchant) {
 	merchantMaps.Store(m.MerchantNo, m)
 }
 
