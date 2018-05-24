@@ -103,9 +103,10 @@ func (c *SendMessage) AddVoice(voiceUrl string, duration int) *SendMessage {
 	return c.AddData(data)
 }
 
-func (c *SendMessage) AddLink(link, img, desc string) *SendMessage {
+func (c *SendMessage) AddLink(title, link, img, desc string) *SendMessage {
 	data := &MessageData{
 		MsgType: MSG_TYPE_LINK,
+		Content: title,
 		Link:    link,
 		Image:   img,
 		Desc:    desc,
