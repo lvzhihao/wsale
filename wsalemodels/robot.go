@@ -25,6 +25,10 @@ func GetRobotsByMerchant(db *gorm.DB, merchantNo string) (rst []*Robot, err erro
 	return
 }
 
+func UpdateRobotFansTotal(db *gorm.DB, robotWxId string, total int) error {
+	return db.Model(&Robot{}).Where("robot_wx_id = ?", robotWxId).Update("fans_total", int32(total)).Error
+}
+
 type RobotExt struct {
 	FansTotal     int32  `gorm:"default:0;index" json:"fans_total"`      //粉丝数量
 	ChatRoomTotal int32  `gorm:"default:0;index" json:"chat_room_total"` //聊天群数量
@@ -46,7 +50,7 @@ func (c *RobotExt) CloseAutoAllow() error {
 	return nil
 }
 
-func (c *RobotExt) UpdateFansTotal() error {
+func (c *RobotExt) UpdateFansTotal(db *gorm.DB, total int) error {
 	//todo
 	return nil
 }

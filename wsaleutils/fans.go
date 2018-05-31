@@ -11,7 +11,7 @@ import (
  */
 func SyncRobotFans(merchant *wsalelibs.Merchant, robotWxId string) ([]*wsalelibs.Fans, error) {
 	page := 1
-	size := 20
+	size := 50
 	list := make([]*wsalelibs.Fans, 0)
 	for {
 		var count int32
@@ -61,5 +61,6 @@ func SyncRobotFansDatabase(db *gorm.DB, merchant *wsalelibs.Merchant, robotWxId 
 		}
 		mdls = append(mdls, mdl)
 	}
+	go wsalemodels.UpdateRobotFansTotal(db, robotWxId, len(mdls))
 	return mdls, nil
 }
