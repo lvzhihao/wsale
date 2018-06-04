@@ -59,7 +59,7 @@ type RobotModifyResult struct {
 	HeadImage  string `json:"head_image"`  //机器人头像URL
 	WhatsUp    string `json:"whats_up"`    //个性签名
 	Sex        int32  `json:"sex"`         //性别: 0:未定义 1:男 2:女
-	Status     int32  `json:"status"`      //状态: 10:在线 12:离线 14:注销
+	Area       string `json:"area"`        //地区
 }
 
 func (c *RobotModifyResult) Unmarshal(iter interface{}) error {
