@@ -17,6 +17,7 @@ type Robot struct {
 	CodeImage         string `gorm:"type:varchar(500)" json:"code_image"`                                                   //机器人二维码
 	WhatsUp           string `gorm:"type:varchar(200)" json:"whats_up"`                                                     //个性签名
 	Sex               int32  `gorm:"default:0;index" json:"sex"`                                                            //性别: 0:未定义 1:男 2:女
+	Area              string `gorm:"type:varchar(100)" json:"area"`                                                         //地区
 	Status            int32  `gorm:"default:12;index" json:"status"`                                                        //状态: 10:在线 12:离线 14:注销
 	AutoAllowFan      bool   `gorm:"default:false" json:"auto_allow_fan"`                                                   //是否自动通过好友申请
 	AutoAllowChatRoom bool   `gorm:"default:false" json:"auto_allow_chat_room"`                                             //是否自动通过群聊邀请
@@ -44,6 +45,7 @@ func RobotUnmarshal(iter interface{}, robot *Robot) error {
 	robot.CodeImage, _ = m.GetString("vcCodeImages")
 	robot.WhatsUp, _ = m.GetString("vcSign")
 	robot.Sex, _ = m.GetInt32("nSex")
+	robot.Area, _ = m.GetString("vcArea")
 	robot.Status, _ = m.GetInt32("nType")
 	robot.AutoAllowFan, _ = m.GetBool("nIsAllow")
 	robot.AutoAllowChatRoom, _ = m.GetBool("nIsChatRoom")
@@ -87,6 +89,6 @@ func RobotModifyResultUnmarshal(iter interface{}, result *RobotModifyResult) err
 	result.HeadImage, _ = m.GetString("vcHeadImages")
 	result.WhatsUp, _ = m.GetString("vcSign")
 	result.Sex, _ = m.GetInt32("nSex")
-	result.Status, _ = m.GetInt32("nType")
+	result.Area, _ = m.GetString("vcArea")
 	return nil
 }
