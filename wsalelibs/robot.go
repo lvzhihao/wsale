@@ -1,6 +1,7 @@
 package wsalelibs
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
@@ -46,5 +47,46 @@ func RobotUnmarshal(iter interface{}, robot *Robot) error {
 	robot.Status, _ = m.GetInt32("nType")
 	robot.AutoAllowFan, _ = m.GetBool("nIsAllow")
 	robot.AutoAllowChatRoom, _ = m.GetBool("nIsChatRoom")
+	return nil
+}
+
+type RobotModifyResult struct {
+	MerchantNo string `json:"merchant_no"` //商户ID
+	RobotWxId  string `json:"robot_wx_id"` //机器人微信ID
+	NickName   string `json:"nick_name"`   //机器人昵称
+	HeadImage  string `json:"head_image"`  //机器人头像URL
+	WhatsUp    string `json:"whats_up"`    //个性签名
+	Sex        int32  `json:"sex"`         //性别: 0:未定义 1:男 2:女
+	Status     int32  `json:"status"`      //状态: 10:在线 12:离线 14:注销
+}
+
+func (c *RobotModifyResult) Unmarshal(iter interface{}) error {
+	return RobotModifyResultUnmarshal(iter, c)
+}
+
+func RobotModifyResultUnmarshal(iter interface{}, result *RobotModifyResult) error {
+	var input map[string]interface{}
+	err := json.Unmarshal([]byte(goutils.ToString(iter)), &input)
+	if err != nil {
+		return err
+	}
+	m := goutils.NewMap(input)
+	id, ok := m.GetString("vcRobotWxId")
+	if !ok {
+		return fmt.Errorf("vcRobotWxId empty")
+	}
+	result.RobotWxId = id
+	result.NickName, _ = m.GetString("vcNickName")
+	base64NickName, ok := m.GetString("vcBase64NickName")
+	if ok {
+		nickName, err := base64.StdEncoding.DecodeString(base64NickName)
+		if err != nil {
+			result.NickName = goutils.ToString(nickName)
+		}
+	}
+	result.HeadImage, _ = m.GetString("vcHeadImages")
+	result.WhatsUp, _ = m.GetString("vcSign")
+	result.Sex, _ = m.GetInt32("nSex")
+	result.Status, _ = m.GetInt32("nType")
 	return nil
 }

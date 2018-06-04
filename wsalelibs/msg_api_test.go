@@ -19,7 +19,7 @@ func Test_003_api_001_SendMessage(t *testing.T) {
 	send.Fans(testAccountFansWxId)
 	send.AddText("hello")
 	send.AddImage("http://www.m555.com/mb_pic/2007/09/20070917093919_6a0709.jpg")
-	send.AddLink("http://www.baidu.com", "http://www.m555.com/mb_pic/2007/09/20070917093919_6a0709.jpg", "baidu")
+	send.AddLink("title", "http://www.baidu.com", "http://www.m555.com/mb_pic/2007/09/20070917093919_6a0709.jpg", "baidu")
 	err := testClient.M(testMerchant).SendMessage(send).Error
 	if err != nil {
 		t.Fatal(err)

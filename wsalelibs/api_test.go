@@ -12,7 +12,7 @@ var (
 	testMerchantNo      string
 	testMerchantSecret  string
 	testAccountId       string
-	testMerchant        *Merchant
+	testMerchant        Merchant
 	testClient          *Client
 	testAccount         map[string]interface{}
 	testAccountFans     []map[string]interface{}
@@ -27,7 +27,7 @@ func init() {
 	flag.StringVar(&testAccountFansWxId, "fansid", "", "fansAccountWxId")
 	flag.StringVar(&testChatRoomId, "room", "", "chatroomId")
 	flag.Parse()
-	testMerchant = &Merchant{
+	testMerchant = Merchant{
 		MerchantNo:     testMerchantNo,
 		MerchantSecret: testMerchantSecret,
 	}
@@ -69,12 +69,12 @@ func Test_002_api_003_GetFriendsListByRobot(t *testing.T) {
 	testAccountFans = list
 }
 
-func Test_002_api_004_GetRobotFansTag(t *testing.T) {
+func Test_002_api_004_GetRobotFansTags(t *testing.T) {
 	var fansWxId []string
 	for _, fan := range testAccountFans {
 		fansWxId = append(fansWxId, goutils.ToString(fan["vcFansWxId"]))
 	}
-	err := testClient.M(testMerchant).GetRobotFansTag(goutils.ToString(testAccount["vcRobotWxId"]), fansWxId).Error
+	err := testClient.M(testMerchant).GetRobotFansTags(goutils.ToString(testAccount["vcRobotWxId"]), fansWxId).Error
 	if err != nil {
 		t.Fatal(err)
 	}
