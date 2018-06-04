@@ -1,6 +1,8 @@
 package wsaleutils
 
 import (
+	"encoding/base64"
+
 	"github.com/jinzhu/gorm"
 	"github.com/lvzhihao/goutils"
 	"github.com/lvzhihao/wsale/wsalelibs"
@@ -79,4 +81,32 @@ func SyncRobotChatRoomsDatabase(db *gorm.DB, merchant *wsalelibs.Merchant, robot
 		db.Save(old) //设置状态为不在群内
 	}
 	return mdls, nil
+}
+
+/*
+ * 群信息异动通知回调并更新数据库，可重复调用
+ */
+func SyncChatRoomInfoCallback(db *gorm.DB, result *wsalelibs.ChatRoomModify) error {
+	// 确认商户
+	var merchant wsalemodels.Merchant
+	err := db.Where("merchant_no = ?", result.MerchantNo).First(&merchant).Error
+	if err != nil {
+		return err
+	}
+	// 初始化群信息
+	obj := new(wsalemodels.ChatRoom)
+	err = obj.Ensure(db, merchant.MerchantNo, result.RobotWxId, result.ChatRoomId)
+	if err != nil {
+		return err
+	}
+	// update
+	obj.ChatRoomName = result.ChatRoomName
+	obj.ChatRoomNameBase64 = result.ChatRoomNameBase64
+	decoded, err := base64.StdEncoding.DecodeString(result.ChatRoomNameBase64)
+	if err == nil {
+		obj.ChatRoomName = goutils.ToString(decoded)
+	}
+	obj.HeadImage = result.HeadImage
+	obj.AdminWxId = result.AdminWxId
+	return db.Save(obj).Error
 }

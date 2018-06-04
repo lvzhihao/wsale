@@ -1,6 +1,7 @@
 package wsaleutils
 
 import (
+	"encoding/base64"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -67,4 +68,40 @@ func SyncChatRoomMermbersDatabase(db *gorm.DB, merchant *wsalelibs.Merchant, cha
 	go wsalemodels.UpdateChatRoomMembersCount(db, chatRoomId, len(ids)) // 同步人数
 	return mdls, nil
 
+}
+
+/*
+ * 群好友入群回调及更新数据库
+ */
+func SyncChatRoomMemberJoinCallback(db *gorm.DB, member *wsalelibs.ChatRoomMember) error {
+	// 确认商户
+	var merchant wsalemodels.Merchant
+	err := db.Where("merchant_no = ?", member.MerchantNo).First(&merchant).Error
+	if err != nil {
+		return err
+	}
+	// 初始化群信息
+	obj := new(wsalemodels.ChatRoomMember)
+	err = obj.Ensure(db, merchant.MerchantNo, member.ChatRoomId, member.FansWxId)
+	if err != nil {
+		return err
+	}
+	// update
+	obj.NickName = member.NickName
+	obj.NickNameBase64 = member.NickNameBase64
+	decoded, err := base64.StdEncoding.DecodeString(member.NickNameBase64)
+	if err == nil {
+		obj.NickName = goutils.ToString(decoded)
+	}
+	obj.HeadImage = member.HeadImage
+	obj.InvitedWxId = member.InvitedWxId
+	obj.ChatNickName = member.ChatNickName
+	obj.ChatNickNameBase64 = member.ChatNickNameBase64
+	decoded, err = base64.StdEncoding.DecodeString(member.ChatNickNameBase64)
+	if err == nil {
+		obj.ChatNickName = goutils.ToString(decoded)
+	}
+	obj.MemberInStatus = true
+	obj.JoinDate = time.Now()
+	return db.Save(obj).Error
 }
