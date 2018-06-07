@@ -25,7 +25,9 @@ func (c *ChatRoomMember) Ensure(db *gorm.DB, merchantNo, chatRoomId, fansWxId st
 
 func GetChatRoomMembersByChatRoomId(db *gorm.DB, merchantNo, chatRoomId string, finder *Finder) (count int64, rst []*ChatRoomMember, err error) {
 	rst = make([]*ChatRoomMember, 0)
-	db = finder.AddWhere("merchant_no = ?", merchantNo).AddWhere("chat_room_id = ?", chatRoomId).Use(db)
+	if finder != nil {
+		db = finder.AddWhere("merchant_no = ?", merchantNo).AddWhere("chat_room_id = ?", chatRoomId).Use(db)
+	}
 	err = db.Model(&ChatRoomMember{}).Offset(-1).Limit(-1).Count(&count).Error
 	if err == nil {
 		err = db.Find(&rst).Error

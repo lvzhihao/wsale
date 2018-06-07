@@ -25,7 +25,9 @@ func (c *Fans) Ensure(db *gorm.DB, merchantNo, robotWxId, fansWxId string) error
 
 func GetFansByRobot(db *gorm.DB, merchantNo, robotWxId string, finder *Finder) (count int64, rst []*Fans, err error) {
 	rst = make([]*Fans, 0)
-	db = finder.AddWhere("merchant_no = ?", merchantNo).AddWhere("robot_wx_id = ?", robotWxId).Use(db)
+	if finder != nil {
+		db = finder.AddWhere("merchant_no = ?", merchantNo).AddWhere("robot_wx_id = ?", robotWxId).Use(db)
+	}
 	err = db.Model(&Fans{}).Offset(-1).Limit(-1).Count(&count).Error
 	if err == nil {
 		err = db.Find(&rst).Error
