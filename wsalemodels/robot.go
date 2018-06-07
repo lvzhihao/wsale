@@ -29,6 +29,10 @@ func UpdateRobotFansTotal(db *gorm.DB, robotWxId string, total int) error {
 	return db.Model(&Robot{}).Where("robot_wx_id = ?", robotWxId).Update("fans_total", int32(total)).Error
 }
 
+func UpdateRobotChatRoomTotal(db *gorm.DB, robotWxId string, total int) error {
+	return db.Model(&Robot{}).Where("robot_wx_id = ?", robotWxId).Update("chat_room_total", int32(total)).Error
+}
+
 type RobotExt struct {
 	FansTotal     int32  `gorm:"default:0;index" json:"fans_total"`      //粉丝数量
 	ChatRoomTotal int32  `gorm:"default:0;index" json:"chat_room_total"` //聊天群数量

@@ -80,6 +80,7 @@ func SyncRobotChatRoomsDatabase(db *gorm.DB, merchant *wsalelibs.Merchant, robot
 		old.RobotInStatus = false
 		db.Save(old) //设置状态为不在群内
 	}
+	go wsalemodels.UpdateRobotChatRoomTotal(db, robotWxId, len(ids))
 	return mdls, nil
 }
 
