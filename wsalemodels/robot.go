@@ -20,11 +20,14 @@ func (c *Robot) Ensure(db *gorm.DB, merchantNo, robotWxId string) error {
 	return db.Where(Robot{Robot: *unique}).FirstOrInit(c).Error
 }
 
-func GetRobotsByMerchant(db *gorm.DB, merchantNo string, finder *Finder) (rst []*Robot, err error) {
+func GetRobotsByMerchant(db *gorm.DB, merchantNo string, finder *Finder) (count int64, rst []*Robot, err error) {
+	rst = make([]*Robot, 0)
 	if finder != nil {
-		err = finder.Use(db).Where("merchant_no = ?", merchantNo).Find(&rst).Error
-	} else {
-		err = db.Where("merchant_no = ?", merchantNo).Find(&rst).Error
+		db = finder.AddWhere("merchant_no = ?", merchantNo).Use(db)
+	}
+	err = db.Model(&Robot{}).Offset(-1).Limit(-1).Count(&count).Error
+	if err == nil {
+		err = db.Find(&rst).Error
 	}
 	return
 }
