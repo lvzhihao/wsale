@@ -62,7 +62,7 @@ func SyncChatRoomMermbersDatabase(db *gorm.DB, merchant *wsalelibs.Merchant, cha
 			continue
 		}
 		old.MemberInStatus = false
-		old.QuitDate = time.Now()
+		old.QuitDate = &time.Now()
 		db.Save(old) //设置状态为不在群内
 	}
 	go wsalemodels.UpdateChatRoomMembersCount(db, chatRoomId, len(ids)) // 同步人数

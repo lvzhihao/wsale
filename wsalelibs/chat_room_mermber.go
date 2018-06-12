@@ -99,7 +99,7 @@ func ChatRoomMemberJoinCallback(iter interface{}) (ret []*ChatRoomMember, err er
 			if err != nil {
 				return
 			}
-			obj.JoinDate = time.Now() // 补上入群时间
+			obj.JoinDate = &time.Now() // 补上入群时间
 			ret = append(ret, obj)
 		}
 	}

@@ -64,7 +64,7 @@ func FansUnmarshal(iter interface{}, fans *Fans) error {
 	fans.City, _ = m.GetString("vcCity")
 	fans.WsaleTags, _ = m.GetString("vcTags")
 	if t, ok := m.GetString("dtCreateDate"); ok {
-		fans.FollowDate, _ = time.ParseInLocation("2006-01-02T15:04:05.999", t, TimeLocation)
+		*fans.FollowDate, _ = time.ParseInLocation("2006-01-02T15:04:05.999", t, TimeLocation)
 	}
 
 	return nil
@@ -118,16 +118,16 @@ func FansTagsMapUnmarshal(iter interface{}) (map[string]*FansTags, error) {
 }
 
 type FansInvite struct {
-	MerchantNo     string     `gorm:"not null;type:varchar(80);index" json:"merchant_no"` //商户ID
-	RobotWxId      string     `gorm:"not null;type:varchar(80);index" json:"robot_wx_id"` //机器人微信ID
-	FansWxId       string     `gorm:"not null;type:varchar(80);index "json:"fans_wx_id"`  //好友微信ID
-	NickName       string     `gorm:"not null;type:varchar(100)" json:"nick_name`         //昵称
-	HeadImage      string     `gorm:"type:varchar(500); json:"head_image"`                //关像
-	RequestText    string     `gorm:"type:varchar(200)" json:"request_text"`              //验证语
-	RequestDate    *time.Time `gorm:"default:NULL" json:"request_date"`                   //请求时间
-	Source         string     `gorm:"type:varchar(50)" json:"source"`                     //来源
-	RequestPackage string     `gorm:"type:text" json:"request_package"`                   //请求包，同意加好友使用
-	FansStatus     int32      `json:"fans_status"`                                        // 1 已经添加 2 未同意 3 同意失败
+	MerchantNo     string    `gorm:"not null;type:varchar(80);index" json:"merchant_no"` //商户ID
+	RobotWxId      string    `gorm:"not null;type:varchar(80);index" json:"robot_wx_id"` //机器人微信ID
+	FansWxId       string    `gorm:"not null;type:varchar(80);index "json:"fans_wx_id"`  //好友微信ID
+	NickName       string    `gorm:"not null;type:varchar(100)" json:"nick_name`         //昵称
+	HeadImage      string    `gorm:"type:varchar(500); json:"head_image"`                //关像
+	RequestText    string    `gorm:"type:varchar(200)" json:"request_text"`              //验证语
+	RequestDate    time.Time `gorm:"default:NULL" json:"request_date"`                   //请求时间
+	Source         string    `gorm:"type:varchar(50)" json:"source"`                     //来源
+	RequestPackage string    `gorm:"type:text" json:"request_package"`                   //请求包，同意加好友使用
+	FansStatus     int32     `json:"fans_status"`                                        // 1 已经添加 2 未同意 3 同意失败
 }
 
 func (c *FansInvite) Unmarshal(iter interface{}) error {
