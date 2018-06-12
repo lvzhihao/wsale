@@ -64,7 +64,9 @@ func FansUnmarshal(iter interface{}, fans *Fans) error {
 	fans.City, _ = m.GetString("vcCity")
 	fans.WsaleTags, _ = m.GetString("vcTags")
 	if t, ok := m.GetString("dtCreateDate"); ok {
-		*fans.FollowDate, _ = time.ParseInLocation("2006-01-02T15:04:05.999", t, TimeLocation)
+		if followDate, err := time.ParseInLocation("2006-01-02T15:04:05.999", t, TimeLocation); err == nil {
+			fans.FollowDate = &followDate
+		}
 	}
 
 	return nil
