@@ -36,5 +36,5 @@ func GetFansByRobot(db *gorm.DB, merchantNo, robotWxId string, finder *Finder) (
 }
 
 type FansExt struct {
-	UnfollowDate time.Time `json:"unfollow_date"` //取消好友时间（非时时更新，程序逻辑对比结果）
+	UnfollowDate time.Time `gorm:"default:1970-01-01 00:00:01" json:"unfollow_date"` //取消好友时间（非时时更新，程序逻辑对比结果）
 }

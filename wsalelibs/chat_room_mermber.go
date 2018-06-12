@@ -20,7 +20,7 @@ type ChatRoomMember struct {
 	InvitedWxId        string    `gorm:"type:varchar(80)" json:"invited_wx_id"`                                                              //邀请人ID
 	ChatNickName       string    `gorm:"type:varchar(100)" json:"chat_nick_name"`                                                            //群用户群内昵称
 	ChatNickNameBase64 string    `gorm:"type:varchar(250)" json:"chat_nick_name_base64"`                                                     //用户群内昵称base64
-	JoinDate           time.Time `json:"join_date"`                                                                                          //入群时间
+	JoinDate           time.Time `gorm:"default:1970-01-01 00:00:01" json:"join_date"`                                                       //入群时间
 	//todo 所有返回数据都没有时间和类型
 	// JoinType
 }
