@@ -1,8 +1,6 @@
 package wsalemodels
 
 import (
-	"time"
-
 	"github.com/jinzhu/gorm"
 	"github.com/lvzhihao/wsale/wsalelibs"
 )
@@ -45,6 +43,6 @@ func EnusreChatRoomMembersCouunt(db *gorm.DB, chatRoomId string) error {
 }
 
 type ChatRoomMemberExt struct {
-	MemberInStatus bool       `gorm:"default:true" json:"member_in_status"` // 群用户否在群内
-	QuitDate       *time.Time `gorm:"default:NULL" json:"quit_date"`        // 退群时间
+	MemberInStatus bool               `gorm:"default:true" json:"member_in_status"` // 群用户否在群内
+	QuitDate       wsalelibs.NullTime `gorm:"default:NULL" json:"quit_date"`        // 退群时间
 }

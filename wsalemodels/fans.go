@@ -1,8 +1,6 @@
 package wsalemodels
 
 import (
-	"time"
-
 	"github.com/jinzhu/gorm"
 	"github.com/lvzhihao/wsale/wsalelibs"
 )
@@ -36,5 +34,5 @@ func GetFansByRobot(db *gorm.DB, merchantNo, robotWxId string, finder *Finder) (
 }
 
 type FansExt struct {
-	UnfollowDate *time.Time `gorm:"default:NULL" json:"unfollow_date"` //取消好友时间（非时时更新，程序逻辑对比结果）
+	UnfollowDate wsalelibs.NullTime `gorm:"default:NULL" json:"unfollow_date"` //取消好友时间（非时时更新，程序逻辑对比结果）
 }

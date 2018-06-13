@@ -10,17 +10,17 @@ import (
 )
 
 type ChatRoomMember struct {
-	MerchantNo         string     `gorm:"not null;type:varchar(80);unique_index:uix_merchant_no_chat_room_id_fans_wx_id" json:"merchant_no"`  //商户ID
-	ChatRoomId         string     `gorm:"not null;type:varchar(80);unique_index:uix_merchant_no_chat_room_id_fans_wx_id" json:"chat_room_id"` //群号
-	FansWxId           string     `gorm:"not null;type:varchar(80);unique_index:uix_merchant_no_chat_room_id_fans_wx_id" json:"fans_wx_id"`   //群用户ID
-	NickName           string     `gorm:"not null;type:varchar(100)" json:"nick_name"`                                                        //群用户昵称
-	NickNameBase64     string     `gorm:"type:varchar(250)" json:"nick_name_base64"`                                                          //用户昵称base64
-	HeadImage          string     `gorm:"type:varchar(500)" json:"head_image"`                                                                //用户头像
-	WxAlias            string     `gorm:"type:varchar(100)" json:"wx_alias"`                                                                  //微信号
-	InvitedWxId        string     `gorm:"type:varchar(80)" json:"invited_wx_id"`                                                              //邀请人ID
-	ChatNickName       string     `gorm:"type:varchar(100)" json:"chat_nick_name"`                                                            //群用户群内昵称
-	ChatNickNameBase64 string     `gorm:"type:varchar(250)" json:"chat_nick_name_base64"`                                                     //用户群内昵称base64
-	JoinDate           *time.Time `gorm:"default:NULL" json:"join_date"`                                                                      //入群时间
+	MerchantNo         string   `gorm:"not null;type:varchar(80);unique_index:uix_merchant_no_chat_room_id_fans_wx_id" json:"merchant_no"`  //商户ID
+	ChatRoomId         string   `gorm:"not null;type:varchar(80);unique_index:uix_merchant_no_chat_room_id_fans_wx_id" json:"chat_room_id"` //群号
+	FansWxId           string   `gorm:"not null;type:varchar(80);unique_index:uix_merchant_no_chat_room_id_fans_wx_id" json:"fans_wx_id"`   //群用户ID
+	NickName           string   `gorm:"not null;type:varchar(100)" json:"nick_name"`                                                        //群用户昵称
+	NickNameBase64     string   `gorm:"type:varchar(250)" json:"nick_name_base64"`                                                          //用户昵称base64
+	HeadImage          string   `gorm:"type:varchar(500)" json:"head_image"`                                                                //用户头像
+	WxAlias            string   `gorm:"type:varchar(100)" json:"wx_alias"`                                                                  //微信号
+	InvitedWxId        string   `gorm:"type:varchar(80)" json:"invited_wx_id"`                                                              //邀请人ID
+	ChatNickName       string   `gorm:"type:varchar(100)" json:"chat_nick_name"`                                                            //群用户群内昵称
+	ChatNickNameBase64 string   `gorm:"type:varchar(250)" json:"chat_nick_name_base64"`                                                     //用户群内昵称base64
+	JoinDate           NullTime `gorm:"default:NULL" json:"join_date"`                                                                      //入群时间
 	//todo 所有返回数据都没有时间和类型
 	// JoinType
 }
@@ -99,7 +99,7 @@ func ChatRoomMemberJoinCallback(iter interface{}) (ret []*ChatRoomMember, err er
 			if err != nil {
 				return
 			}
-			*obj.JoinDate = time.Now() // 补上入群时间
+			obj.JoinDate.Set(time.Now()) // 补上入群时间
 			ret = append(ret, obj)
 		}
 	}
