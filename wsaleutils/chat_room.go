@@ -25,13 +25,10 @@ func SyncRobotChatRooms(merchant *wsalelibs.Merchant, robotWxId string) ([]*wsal
 		}
 		for _, value := range rst {
 			chatRoom := &wsalelibs.ChatRoom{}
-			err := chatRoom.Unmarshal(value)
+			err := chatRoom.Unmarshal(merchant.MerchantNo, robotWxId, value)
 			if err != nil {
 				return nil, err
 			} else {
-				//fix merchant no & robot_wx_id
-				chatRoom.MerchantNo = merchant.MerchantNo
-				chatRoom.RobotWxId = robotWxId
 				list = append(list, chatRoom)
 			}
 		}
