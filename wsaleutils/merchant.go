@@ -26,12 +26,10 @@ func SyncMerchantRobots(merchant *wsalelibs.Merchant) ([]*wsalelibs.Robot, error
 	robots := make([]*wsalelibs.Robot, 0)
 	for _, value := range rst {
 		robot := &wsalelibs.Robot{}
-		err := robot.Unmarshal(value)
+		err := robot.Unmarshal(merchant.MerchantNo, value)
 		if err != nil {
 			return nil, err
 		} else {
-			//fix merchant no
-			robot.MerchantNo = merchant.MerchantNo
 			robots = append(robots, robot)
 		}
 	}

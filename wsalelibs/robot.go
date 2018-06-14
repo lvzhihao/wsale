@@ -23,11 +23,11 @@ type Robot struct {
 	AutoAllowChatRoom bool   `gorm:"default:false" json:"auto_allow_chat_room"`                                             //是否自动通过群聊邀请
 }
 
-func (c *Robot) Unmarshal(iter interface{}) error {
-	return RobotUnmarshal(iter, c)
+func (c *Robot) Unmarshal(merchantNo string, iter interface{}) error {
+	return RobotUnmarshal(merchantNo, iter, c)
 }
 
-func RobotUnmarshal(iter interface{}, robot *Robot) error {
+func RobotUnmarshal(merchantNo string, iter interface{}, robot *Robot) error {
 	var input map[string]interface{}
 	err := json.Unmarshal([]byte(goutils.ToString(iter)), &input)
 	if err != nil {
@@ -38,6 +38,7 @@ func RobotUnmarshal(iter interface{}, robot *Robot) error {
 	if !ok {
 		return fmt.Errorf("vcRobotWxId empty")
 	}
+	robot.MerchantNo = merchantNo
 	robot.RobotWxId = id
 	robot.NickName, _ = m.GetString("vcNickName")
 	robot.HeadImage, _ = m.GetString("vcHeadImages")
@@ -50,6 +51,24 @@ func RobotUnmarshal(iter interface{}, robot *Robot) error {
 	robot.AutoAllowFan, _ = m.GetBool("nIsAllow")
 	robot.AutoAllowChatRoom, _ = m.GetBool("nIsChatRoom")
 	return nil
+}
+
+func RobotInfoCallback(iter interface{}) (ret []Robot, err error) {
+	ret = make([]Robot, 0)
+	rst := new(Callback)
+	err = rst.Unmarshal(iter)
+	if err != nil {
+		return
+	}
+	for _, data := range rst.Each() {
+		var obj Robot
+		err = RobotUnmarshal(rst.MerchantNo, data, &obj)
+		if err != nil {
+			return
+		}
+		ret = append(ret, obj)
+	}
+	return
 }
 
 type RobotModifyResult struct {
