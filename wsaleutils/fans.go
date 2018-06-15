@@ -22,12 +22,11 @@ func SyncRobotFans(merchant *wsalelibs.Merchant, robotWxId string) ([]*wsalelibs
 		}
 		for _, value := range rst {
 			fans := &wsalelibs.Fans{}
-			err := fans.Unmarshal(value)
+			err := fans.Unmarshal(merchant.MerchantNo, value)
 			if err != nil {
 				return nil, err
 			} else {
 				//fix merchant no
-				fans.MerchantNo = merchant.MerchantNo
 				list = append(list, fans)
 			}
 		}

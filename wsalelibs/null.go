@@ -30,7 +30,7 @@ func (c NullTime) Value() (driver.Value, error) {
 	}.Value()
 }
 
-func (c *NullTime) MarshalJSON() ([]byte, error) {
+func (c NullTime) MarshalJSON() ([]byte, error) {
 	if c.Valid {
 		return json.Marshal(c.Time)
 	} else {
@@ -38,7 +38,7 @@ func (c *NullTime) MarshalJSON() ([]byte, error) {
 	}
 }
 
-func (c *NullTime) UnmarshalJSON(data []byte) error {
+func (c NullTime) UnmarshalJSON(data []byte) error {
 	var t time.Time
 	err := json.Unmarshal(data, &t)
 	if err != nil {

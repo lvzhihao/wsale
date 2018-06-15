@@ -26,11 +26,11 @@ type Fans struct {
 	FollowDate     NullTime `gorm:"default:NULL" json:"follow_date"`                                                                  //添加好友时间（账号离线期间的添加时间无法统计，都归为账号上线时间）
 }
 
-func (c *Fans) Unmarshal(iter interface{}) error {
-	return FansUnmarshal(iter, c)
+func (c *Fans) Unmarshal(merchantNo string, iter interface{}) error {
+	return FansUnmarshal(merchantNo, iter, c)
 }
 
-func FansUnmarshal(iter interface{}, fans *Fans) error {
+func FansUnmarshal(merchantNo string, iter interface{}, fans *Fans) error {
 	var input map[string]interface{}
 	err := json.Unmarshal([]byte(goutils.ToString(iter)), &input)
 	if err != nil {
@@ -45,6 +45,7 @@ func FansUnmarshal(iter interface{}, fans *Fans) error {
 	if !ok {
 		return fmt.Errorf("vcFansWxId empty")
 	}
+	fans.MerchantNo = merchantNo
 	fans.RobotWxId = robotWxId
 	fans.FansWxId = fansWxId
 	fans.UserName, _ = m.GetString("vcUserName")
@@ -67,10 +68,33 @@ func FansUnmarshal(iter interface{}, fans *Fans) error {
 		if followDate, err := time.ParseInLocation("2006-01-02T15:04:05.999", t, TimeLocation); err == nil {
 			fans.FollowDate.Time = followDate
 			fans.FollowDate.Valid = true
+		} else if followDate, err := time.ParseInLocation("2006/1/02 15:04:05", t, TimeLocation); err == nil {
+			fans.FollowDate.Time = followDate
+			fans.FollowDate.Valid = true
+		} else if followDate, err := time.ParseInLocation("2006/1/2 15:04:05", t, TimeLocation); err == nil {
+			fans.FollowDate.Time = followDate
+			fans.FollowDate.Valid = true
 		}
-	}
-
+	} // 时间格式一直在变换，我也是无语 todo 最终把时间转换兼容下
 	return nil
+}
+
+func FansJoinCallback(iter interface{}) (ret []Fans, err error) {
+	ret = make([]Fans, 0)
+	rst := new(Callback)
+	err = rst.Unmarshal(iter)
+	if err != nil {
+		return
+	}
+	for _, data := range rst.Each() {
+		var obj Fans
+		err = FansUnmarshal(rst.MerchantNo, data, &obj)
+		if err != nil {
+			return
+		}
+		ret = append(ret, obj)
+	}
+	return
 }
 
 type FansTags struct {
