@@ -173,11 +173,11 @@ type FansAgreeResult struct {
 	Result     int32  `json:"result"`                                             //请求结果 1 添加成功 0 添加失败
 }
 
-func (c *FansAgreeResult) Unmarshal(iter interface{}) error {
-	return FansAgreeResultUnmarshal(iter, c)
+func (c *FansAgreeResult) Unmarshal(merchantNo string, iter interface{}) error {
+	return FansAgreeResultUnmarshal(merchantNo, iter, c)
 }
 
-func FansAgreeResultUnmarshal(iter interface{}, result *FansAgreeResult) error {
+func FansAgreeResultUnmarshal(merchantNo string, iter interface{}, result *FansAgreeResult) error {
 	var input map[string]interface{}
 	err := json.Unmarshal([]byte(goutils.ToString(iter)), &input)
 	if err != nil {
@@ -192,10 +192,29 @@ func FansAgreeResultUnmarshal(iter interface{}, result *FansAgreeResult) error {
 	if !ok {
 		return fmt.Errorf("vcFansWxId empty")
 	}
+	result.MerchantNo = merchantNo
 	result.RobotWxId = robotWxId
 	result.FansWxId = fansWxId
 	result.Result, _ = m.GetInt32("nResult")
 	return nil
+}
+
+func FansAgreeResultCallback(iter interface{}) (ret []FansAgreeResult, err error) {
+	ret = make([]FansAgreeResult, 0)
+	rst := new(Callback)
+	err = rst.Unmarshal(iter)
+	if err != nil {
+		return
+	}
+	for _, data := range rst.Each() {
+		var obj FansAgreeResult
+		err = FansAgreeResultUnmarshal(rst.MerchantNo, data, &obj)
+		if err != nil {
+			return
+		}
+		ret = append(ret, obj)
+	}
+	return
 }
 
 /*
