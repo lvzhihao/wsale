@@ -133,11 +133,11 @@ type FansInvite struct {
 	FansStatus     int32     `json:"fans_status"`                                        // 1 已经添加 2 未同意 3 同意失败
 }
 
-func (c *FansInvite) Unmarshal(iter interface{}) error {
-	return FansInviteUnmarshal(iter, c)
+func (c *FansInvite) Unmarshal(merchantNo string, iter interface{}) error {
+	return FansInviteUnmarshal(merchantNo, iter, c)
 }
 
-func FansInviteUnmarshal(iter interface{}, invite *FansInvite) error {
+func FansInviteUnmarshal(merchantNo string, iter interface{}, invite *FansInvite) error {
 	var input map[string]interface{}
 	err := json.Unmarshal([]byte(goutils.ToString(iter)), &input)
 	if err != nil {
@@ -152,6 +152,7 @@ func FansInviteUnmarshal(iter interface{}, invite *FansInvite) error {
 	if !ok {
 		return fmt.Errorf("vcFansWxId empty")
 	}
+	invite.MerchantNo = merchantNo
 	invite.RobotWxId = robotWxId
 	invite.FansWxId = fansWxId
 	invite.NickName, _ = m.GetString("vcNickName")
@@ -166,6 +167,27 @@ func FansInviteUnmarshal(iter interface{}, invite *FansInvite) error {
 	return nil
 }
 
+func FansInviteCallback(iter interface{}) (ret []FansInvite, err error) {
+	ret = make([]FansInvite, 0)
+	rst := new(Callback)
+	err = rst.Unmarshal(iter)
+	if err != nil {
+		return
+	}
+	for _, data := range rst.Each() {
+		var obj FansInvite
+		err = FansInviteUnmarshal(rst.MerchantNo, data, &obj)
+		if err != nil {
+			return
+		}
+		ret = append(ret, obj)
+	}
+	return
+}
+
+/*
+ * 同步好友请求
+ */
 type FansAgreeResult struct {
 	MerchantNo string `gorm:"not null;type:varchar(80);index" json:"merchant_no"` //商户ID
 	RobotWxId  string `gorm:"not null;type:varchar(80);index" json:"robot_wx_id"` //机器人微信ID
@@ -173,6 +195,9 @@ type FansAgreeResult struct {
 	Result     int32  `json:"result"`                                             //请求结果 1 添加成功 0 添加失败
 }
 
+/*
+ * 回调解码，单条数据，详见个人号开发文档
+ */
 func (c *FansAgreeResult) Unmarshal(merchantNo string, iter interface{}) error {
 	return FansAgreeResultUnmarshal(merchantNo, iter, c)
 }
@@ -199,6 +224,9 @@ func FansAgreeResultUnmarshal(merchantNo string, iter interface{}, result *FansA
 	return nil
 }
 
+/*
+ * 同意好友请求回调
+ */
 func FansAgreeResultCallback(iter interface{}) (ret []FansAgreeResult, err error) {
 	ret = make([]FansAgreeResult, 0)
 	rst := new(Callback)
